@@ -57,6 +57,11 @@
             path: ~/.bashrc
             line: export LC_ALL="en_US.UTF-8"
 
+      - name: copy tmux configuration
+        copy:
+            src: files/.tmux.conf
+            dest: ~/.tmux.conf
+
       - name: copy neovim installation script
         copy:
             src: files/install_neovim_to_amazonlinux.sh
@@ -94,6 +99,15 @@
             path: ~/.bashrc
             line: 'alias vim=nvim'
 
+      - name: create neovim directories
+        file: 
+        path: "~/.vim/{{item}}"
+            state: directory
+        with_items:
+            - 'backupdir'
+            - 'swapdir'
+            - 'undodir'
+
       - name: install Docker
         become: yes
         shell: yes | amazon-linux-extras install docker
@@ -108,3 +122,13 @@
             name: docker
             enabled: yes
             state: started
+
+      - name: configure git author
+        git_config:
+            name: user.name
+            value: 'Rafal Studnicki'
+
+      - name: configure git e-mail
+        git_config:
+            name: user.email
+            value: 'studzien@gmail.com'

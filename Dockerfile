@@ -13,8 +13,14 @@ RUN wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
     mix local.hex --force && \
     mix local.rebar --force
 
-COPY . /breaking-raft
+# this is so that the long rocksdb build is cached
+COPY Makefile mix.exs mix.lock /breaking-raft/
 
 RUN cd /breaking-raft && make deps
 
+COPY priv/ /breaking-raft/priv/
+COPY lib/ /breaking-raft/lib/
+
 RUN cd /breaking-raft && make release
+
+CMD /breaking-raft/_build/prod/rel/breaking_raft/bin/breaking_raft start
