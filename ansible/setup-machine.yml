@@ -1,0 +1,110 @@
+---
+- hosts: all
+  remote_user: ec2-user
+  vars:
+      asdf: v0.7.4
+      erlang: 22.1
+      elixir: 1.9.1
+  tasks:
+      - name: install epel
+        become: yes
+        yum:
+            name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+            state: present
+
+      - name: install tools
+        become: yes
+        yum:
+            name: ['git', 'tmux', 'neovim']
+            state: latest
+
+      - name: clone asdf
+        git:
+            repo: https://github.com/asdf-vm/asdf.git
+            dest: ~/.asdf
+            version: "{{ asdf }}"
+
+      - name: add asdf to path
+        shell: echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
+
+      - name: install asdf plugins
+        shell: asdf plugin-add {{ item }}
+        ignore_errors: yes
+        with_items:
+            - erlang
+            - elixir
+
+      - name: install build dependendencies
+        become: yes
+        yum:
+            name: ['openssl-devel', 'automake', 'autoconf', 'ncurses-devel', 'gcc']
+            state: latest
+
+      - name: install erlang
+        shell: asdf install erlang {{ erlang }}
+
+      - name: set global erlang version
+        shell: asdf global erlang {{ erlang }} 
+
+      - name: install elixir
+        shell: asdf install elixir {{ elixir }}
+
+      - name: set global elixir version
+        shell: asdf global elixir {{ elixir }} 
+
+      - name: set default locale
+        lineinfile:
+            path: ~/.bashrc
+            line: export LC_ALL="en_US.UTF-8"
+
+      - name: copy neovim installation script
+        copy:
+            src: files/install_neovim_to_amazonlinux.sh
+            dest: ~/install_neovim_to_amazonlinux.sh
+            mode: '0700'
+      
+      - name: install neovim
+        shell: ~/install_neovim_to_amazonlinux.sh
+
+      - name: create neovim config directory
+        file:
+            path: ~/.config/nvim
+            state: directory
+
+      - name: copy neovim configuration
+        copy:
+            src: files/init.vim
+            dest: ~/.config/nvim/init.vim
+
+      - name: clone Vundle
+        git:
+            repo: 'https://github.com/gmarik/vundle'
+            dest: ~/.vim/bundle/vundle
+
+      - name: install neovim plugins
+        shell: nvim --headless +BundleInstall +qa
+
+      - name: install YouCompleteMe
+        shell: ./install.py --clang-completer
+        args:
+            chdir: ~/.vim/bundle/YouCompleteMe
+
+      - name: set alias for neovim
+        lineinfile:
+            path: ~/.bashrc
+            line: 'alias vim=nvim'
+
+      - name: install Docker
+        become: yes
+        shell: yes | amazon-linux-extras install docker
+    
+      - name: add user to the Docker group
+        become: yes
+        shell: usermod -a -G docker ec2-user
+
+      - name: start Docker service
+        become: yes
+        service:
+            name: docker
+            enabled: yes
+            state: started
