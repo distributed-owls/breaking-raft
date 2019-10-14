@@ -6,7 +6,7 @@ defmodule BreakingRaft.RealWorld.Cluster do
     {_, 0} = cmd(["stop_cluster"])
     {_, 0} = cmd(["create_network"])
     Enum.map(1..size, &create_node(&1, size))
-    # configure_cluster(size)
+    |> configure_cluster()
   end
 
   def configuration(node_id) do
@@ -14,6 +14,13 @@ defmodule BreakingRaft.RealWorld.Cluster do
     url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/configuration"
     r = HTTPoison.get!(url, [])
     Jason.decode!(r.body)
+  end
+
+  defp configure_cluster(nodes) do
+    Enum.map(nodes, fn n ->
+      node_name(n)
+    end)
+    |> IO.inspect(label: :node_names)
   end
 
   defp create_node(node_id, cluster_size) do
@@ -37,6 +44,16 @@ defmodule BreakingRaft.RealWorld.Cluster do
     {ip, _} = cmd(["node_ip", "#{id}"])
     ip = String.trim(ip)
     RealWorld.Node.new(id, ip)
+  end
+
+  defp node_name(node_id) do
+    exec(node_id, ["rpc", "'IO.puts(Node.self())'"])
+  end
+
+  defp exec(node_id, cmd) do
+    bin = "/breaking-raft/_build/prod/rel/"
+        <>"breaking_raft/bin/breaking_raft"
+    cmd(["exec", "#{node_id}", bin] ++ cmd)
   end
 
   defp cmd(cmd) do

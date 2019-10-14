@@ -43,6 +43,9 @@ function help {
 
   $0 node_ip <NODE_ID>
     Get the IP address of container <NODE_ID>
+
+  $0 exec <NODE_ID>
+    Run arbitrary command inside container <NODE_ID>
   " >&2
 }
 
@@ -73,7 +76,7 @@ function create_node {
         --ip="${subnet}.${n}" \
         --hostname=${name} \
         --name=${name} \
-        breaking-raft
+        "${prefix}"
 }
 
 function start_node {
@@ -119,13 +122,19 @@ function reset_splits {
   done
 }
 
-
 function node_ip {
     docker inspect \
         -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
         ${prefix}-${1}.local
 }
 
+function exec {
+    cmd="${1}"
+    shift
+    docker exec $(_node_name ${cmd}) ${@}
+}
+
+# 'PRIVATE' functions
 function _node_name {
     echo "${prefix}-${1}.local"
 }
