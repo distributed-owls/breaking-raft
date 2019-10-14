@@ -23,7 +23,9 @@ defmodule BreakingRaft.MixProject do
     [
       {:eventually, github: "distributed-owls/eventually"},
       {:httpoison, "~> 1.6"},
-      {:raft, github: "toniqsystems/raft"}
+      {:raft, github: "toniqsystems/raft"},
+      {:plug_cowboy, "~> 2.1"},
+      {:jason, "~> 1.1"}
     ]
   end
 end

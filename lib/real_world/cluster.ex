@@ -7,8 +7,13 @@ defmodule BreakingRaft.RealWorld.Cluster do
     {_, 0} = cmd(["create_network"])
     Enum.map(1..size, &create_node(&1, size))
     # configure_cluster(size)
+  end
 
-    :ok
+  def configuration(node_id) do
+    n = real_world_node(node_id)
+    url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/configuration"
+    r = HTTPoison.get!(url, [])
+    Jason.decode!(r.body)
   end
 
   defp create_node(node_id, cluster_size) do
@@ -20,7 +25,6 @@ defmodule BreakingRaft.RealWorld.Cluster do
   defp wait_for_node(node_id) do
     n = real_world_node(node_id)
     url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/status"
-
     eventually(fn ->
       case HTTPoison.get(url, []) do
         {:ok, r} -> r.status_code == 200
