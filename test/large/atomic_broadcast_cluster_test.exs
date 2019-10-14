@@ -5,6 +5,6 @@ defmodule BreakingRaft.RealWorld.AtomicBroadcastTest do
 
   test "the cluster can be started and configured" do
     [n1, n2, n3] = RealWorld.Cluster.start(3) |> IO.inspect()
-    [^n1,^n2,^n3] = RealWorld.Cluster.configuration(1)
+    [^n1, ^n2, ^n3] = RealWorld.Cluster.configuration(1)
   end
 end
