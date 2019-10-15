@@ -2,10 +2,11 @@ defmodule BreakingRaft.Application do
   @moduledoc false
 
   use Application
+  alias BreakingRaft.RealWorld.AtomicBroadcast
 
   def start(_type, _args) do
     children = [
-      {BreakingRaft.RealWorld.AtomicBroadcast, [name: :"atomic_bcast_#{Node.self()}"]},
+      {AtomicBroadcast, [name: AtomicBroadcast.name(Node.self())]},
       {Plug.Cowboy, [scheme: :http, plug: BreakingRaft.Router, options: [port: 4000]]}
     ]
 

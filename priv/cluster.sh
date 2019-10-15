@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+#set -x
 
 cmd=${1}
 network=breaking-raft-net

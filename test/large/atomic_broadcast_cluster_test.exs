@@ -4,7 +4,10 @@ defmodule BreakingRaft.RealWorld.AtomicBroadcastTest do
   alias BreakingRaft.{RealWorld}
 
   test "the cluster can be started and configured" do
-    [n1, n2, n3] = RealWorld.Cluster.start(3) |> IO.inspect()
-    [^n1, ^n2, ^n3] = RealWorld.Cluster.configuration(1)
+    [_,_,_] = RealWorld.Cluster.start(3)
+    ["breaking_raft@breaking-raft-1.local",
+     "breaking_raft@breaking-raft-2.local",
+     "breaking_raft@breaking-raft-3.local"
+    ] = RealWorld.Cluster.configuration(1) |> Enum.sort()
   end
 end
