@@ -17,7 +17,7 @@ defmodule BreakingRaft.RealWorld.Cluster do
     Jason.decode!(r.body)
   end
 
-  defp configure_cluster([n|_] = nodes) do
+  defp configure_cluster([n | _] = nodes) do
     names = Enum.map(nodes, fn n -> node_name(n) end)
     url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/configuration"
     HTTPoison.post!(url, Jason.encode!(names))
@@ -49,16 +49,7 @@ defmodule BreakingRaft.RealWorld.Cluster do
   end
 
   defp node_name(node) do
-    {n, 0} = exec(node.id, ["rpc", "IO.puts(Node.self())"])
-    String.trim(n) |> String.to_atom()
-  end
-
-  defp exec(node_id, cmd) do
-    bin =
-      "/breaking-raft/_build/prod/rel/" <>
-        "breaking_raft/bin/breaking_raft"
-
-    cmd(["exec", "#{node_id}", bin] ++ cmd)
+    :"breaking_raft@breaking-raft-#{RealWorld.Node.id(node)}.local"
   end
 
   defp cmd(cmd) do

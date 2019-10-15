@@ -1,8 +1,8 @@
 defmodule BreakingRaft.Router do
   use Plug.Router
 
-  plug :match
-  plug :dispatch
+  plug(:match)
+  plug(:dispatch)
 
   get "/status" do
     send_resp(conn, 200, "ok")
@@ -18,5 +18,4 @@ defmodule BreakingRaft.Router do
     {:ok, _} = BreakingRaft.RealWorld.AtomicBroadcast.configure(parsed_body)
     send_resp(conn, 200, "parsed")
   end
-
 end
