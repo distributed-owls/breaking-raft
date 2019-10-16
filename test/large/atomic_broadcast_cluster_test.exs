@@ -38,4 +38,32 @@ defmodule BreakingRaft.RealWorld.AtomicBroadcastTest do
     assert RealWorld.Cluster.delivered_messages(n3) == ["a", "b", "c"]
   end
 
+  test "the cluster can accept concurrent broadcasts" do
+    # given
+    [n1, n2, n3] = RealWorld.Cluster.start(3)
+    messages = MapSet.new(["x", "y", "z"])
+
+    # when
+    messages_in_broadcast_order =
+      RealWorld.Cluster.concurrent_broadcast(n1, messages)
+
+    # then
+    assert MapSet.new(messages_in_broadcast_order) == messages
+    assert RealWorld.Cluster.delivered_messages(n1) ==
+      messages_in_broadcast_order
+    assert RealWorld.Cluster.delivered_messages(n2) ==
+      messages_in_broadcast_order
+    assert RealWorld.Cluster.delivered_messages(n3) ==
+      messages_in_broadcast_order
+  end
+
+  # parallel broadcast
+  # 1. stop node, we can write
+  # 2. stop 2 nodes, we cant' write
+  # 3. stop node, restart it, we can write
+  # 4. stop 2 nodes, restart 1, we can write
+  # 5. stop 2 nodes, restart 2, we can write (?)
+
+
+
 end

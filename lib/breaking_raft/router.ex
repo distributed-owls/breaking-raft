@@ -23,8 +23,8 @@ defmodule BreakingRaft.Router do
   post "/broadcast" do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
     # parsed_body = Jason.decode!(body)
-    {:ok, _} = AtomicBroadcast.broadcast(body)
-    send_resp(conn, 200, "JKM KRUL")
+    {:ok, id} = AtomicBroadcast.broadcast(body)
+    send_resp(conn, 200, "#{id}")
   end
 
   get "/delivered_messages" do

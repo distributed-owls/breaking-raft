@@ -16,8 +16,17 @@ defmodule BreakingRaft.RealWorld.Cluster do
   end
 
   def broadcast(n, message) do
-    %{status_code: 200} = HTTPoison.post!(node_url(n, "/broadcast"), message)
-    # todo return shit
+    %{status_code: 200, body: id} = HTTPoison.post!(node_url(n, "/broadcast"), message)
+    {String.to_integer(id), message}
+  end
+
+  def concurrent_broadcast(n, messages) do
+    messages
+    |> Enum.shuffle()
+    |> Enum.map(fn m -> Task.async(fn -> broadcast(n, m) end) end)
+    |> Enum.map(&Task.await/1)
+    |> Enum.sort()
+    |> Enum.map(fn {_id, msg} -> msg end)
   end
 
   def delivered_messages(n) do
