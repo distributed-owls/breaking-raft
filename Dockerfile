@@ -18,8 +18,9 @@ COPY Makefile mix.exs mix.lock /breaking-raft/
 
 RUN cd /breaking-raft && make deps
 
-COPY priv/ /breaking-raft/priv/
+COPY config/ /breaking-raft/config/
 COPY lib/ /breaking-raft/lib/
+COPY priv/ /breaking-raft/priv/
 
 RUN cd /breaking-raft && make release
 

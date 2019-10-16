@@ -11,17 +11,28 @@ defmodule BreakingRaft.RealWorld.Cluster do
   end
 
   def leader(n) do
-    url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/leader"
-    r = HTTPoison.get!(url, [])
+    %{status_code: 200} = r = HTTPoison.get!(node_url(n, "/leader"), [])
+    Jason.decode!(r.body)
+  end
+
+  def broadcast(n, message) do
+    %{status_code: 200} = HTTPoison.post!(node_url(n, "/broadcast"), message)
+    # todo return shit
+  end
+
+  def delivered_messages(n) do
+    %{status_code: 200} = r = HTTPoison.get!(node_url(n, "/delivered_messages"), [])
     Jason.decode!(r.body)
   end
 
   defp configure_cluster([n | _] = nodes) do
     names = Enum.map(nodes, fn n -> node_name(n) end)
-    url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/configuration"
-    HTTPoison.post!(url, Jason.encode!(names))
-
+    HTTPoison.post!(node_url(n, "/configuration"), Jason.encode!(names))
     nodes
+  end
+
+  defp node_url(n, suffix) do
+    "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}" <> suffix
   end
 
   defp create_node(node_id, cluster_size) do
@@ -32,10 +43,9 @@ defmodule BreakingRaft.RealWorld.Cluster do
   end
 
   defp wait_for_node(n) do
-    url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/status"
-
+    status_url = node_url(n, "/status")
     eventually(fn ->
-      case HTTPoison.get(url, []) do
+      case HTTPoison.get(status_url, []) do
         {:ok, r} -> r.status_code == 200
         _ -> false
       end
