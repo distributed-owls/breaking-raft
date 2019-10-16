@@ -10,9 +10,8 @@ defmodule BreakingRaft.RealWorld.Cluster do
     |> configure_cluster()
   end
 
-  def configuration(node_id) do
-    n = real_world_node(node_id)
-    url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/configuration"
+  def leader(n) do
+    url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/leader"
     r = HTTPoison.get!(url, [])
     Jason.decode!(r.body)
   end
@@ -21,7 +20,8 @@ defmodule BreakingRaft.RealWorld.Cluster do
     names = Enum.map(nodes, fn n -> node_name(n) end)
     url = "http://#{RealWorld.Node.host(n)}:#{RealWorld.Node.port(n)}/configuration"
     HTTPoison.post!(url, Jason.encode!(names))
-    names
+
+    nodes
   end
 
   defp create_node(node_id, cluster_size) do

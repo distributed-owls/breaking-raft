@@ -2,7 +2,7 @@ defmodule BreakingRaft.Application do
   @moduledoc false
 
   use Application
-  alias BreakingRaft.RealWorld.AtomicBroadcast
+  alias BreakingRaft.AtomicBroadcast
 
   def start(_type, _args) do
     children = [

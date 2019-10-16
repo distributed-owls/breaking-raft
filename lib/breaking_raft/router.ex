@@ -8,14 +8,14 @@ defmodule BreakingRaft.Router do
     send_resp(conn, 200, "ok")
   end
 
-  get "/configuration" do
-    send_resp(conn, 200, Jason.encode!([Node.self() | Node.list()]))
+  get "/leader" do
+    send_resp(conn, 200, Jason.encode!(BreakingRaft.AtomicBroadcast.leader()))
   end
 
   post "/configuration" do
     {:ok, body, conn} = Plug.Conn.read_body(conn)
     parsed_body = Jason.decode!(body)
-    {:ok, _} = BreakingRaft.RealWorld.AtomicBroadcast.configure(parsed_body)
+    {:ok, _} = BreakingRaft.AtomicBroadcast.configure(parsed_body)
     send_resp(conn, 200, "parsed")
   end
 end
