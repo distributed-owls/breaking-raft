@@ -4,7 +4,11 @@ defmodule BreakingRaft.AtomicBroadcast do
   def name(node), do: :"atomic_bcast_#{node}"
 
   def broadcast(message) do
-    Raft.write(name(Node.self()), {:append, message})
+    # TODO: refactor to use FE.Result and blog about it
+    case Raft.write(name(Node.self()), {:append, message}) do
+      {:ok, message} -> {:ok, message}
+      {:error, {:redirect, leader}} -> Raft.write(leader, {:append, message})
+    end
   end
 
   def delivered_messages() do
