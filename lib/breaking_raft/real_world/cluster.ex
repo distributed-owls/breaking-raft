@@ -10,14 +10,21 @@ defmodule BreakingRaft.RealWorld.Cluster do
     |> configure_cluster()
   end
 
+  def stop(n) do
+    {_, 0} = cmd(["stop_node", "#{RealWorld.Node.id(n)}"])
+    :ok
+  end
+
   def leader(n) do
     %{status_code: 200} = r = HTTPoison.get!(node_url(n, "/leader"), [])
     Jason.decode!(r.body)
   end
 
   def broadcast(n, message) do
-    %{status_code: 200, body: id} = HTTPoison.post!(node_url(n, "/broadcast"), message)
-    {String.to_integer(id), message}
+    case HTTPoison.post!(node_url(n, "/broadcast"), message) do
+      %{status_code: 200, body: id} -> {:ok, {String.to_integer(id), message}}
+      %{status_code: 500} -> {:error, :broadcast_failed}
+    end
   end
 
   def concurrent_broadcast(n, messages) do
@@ -26,7 +33,7 @@ defmodule BreakingRaft.RealWorld.Cluster do
     |> Enum.map(fn m -> Task.async(fn -> broadcast(n, m) end) end)
     |> Enum.map(&Task.await/1)
     |> Enum.sort()
-    |> Enum.map(fn {_id, msg} -> msg end)
+    |> Enum.map(fn {:ok, {_id, msg}} -> msg end)
   end
 
   def delivered_messages(n) do

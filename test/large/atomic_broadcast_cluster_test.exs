@@ -57,6 +57,33 @@ defmodule BreakingRaft.RealWorld.AtomicBroadcastTest do
       messages_in_broadcast_order
   end
 
+  test "the cluster can accept broadcast with the minority of nodes down" do
+    # given
+    [n1, n2, n3] = RealWorld.Cluster.start(3)
+    :ok = RealWorld.Cluster.stop(n1)
+
+    # when
+    RealWorld.Cluster.broadcast(n2, "a")
+    RealWorld.Cluster.broadcast(n2, "b")
+
+    # then
+    assert RealWorld.Cluster.delivered_messages(n2) == ["a", "b"]
+    assert RealWorld.Cluster.delivered_messages(n3) == ["a", "b"]
+  end
+
+  test "the cluster cannot accept broadcast with majority of nodes down" do
+    # given
+    [n1, n2, n3] = RealWorld.Cluster.start(3)
+    :ok = RealWorld.Cluster.stop(n1)
+    :ok = RealWorld.Cluster.stop(n2)
+
+    # when
+    res = RealWorld.Cluster.broadcast(n3, "a")
+
+    # then
+    assert res == {:error, :broadcast_failed}
+  end
+
   # parallel broadcast
   # 1. stop node, we can write
   # 2. stop 2 nodes, we cant' write
